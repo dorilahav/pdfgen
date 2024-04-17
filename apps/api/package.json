@@ -1,14 +1,19 @@
 {
   "name": "@pdfgen/api",
   "scripts": {
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node ./dist"
   },
   "dependencies": {
     "@hono/node-server": "^1.10.0",
-    "hono": "^4.2.3"
+    "@pdfgen/queuing": "*",
+    "hono": "^4.2.3",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
+    "@types/uuid": "^9.0.8",
     "tsx": "^4.7.1"
   }
 }

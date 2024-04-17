@@ -3,13 +3,22 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "defaultBase": "master",
   "nxCloudAccessToken": "YjZkNGFiMWQtYTA4Zi00M2RmLThhYzEtNGY4ODhmZWQzMTc2fHJlYWQtd3JpdGU=",
+  "namedInputs": {
+    "configuration": [
+      "{projectRoot}/tsconfig.json"
+    ]
+  },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
       "cache": true,
       "inputs": [
-        "src"
+        "configuration",
+        "{projectRoot}/src/**/*"
       ]
+    },
+    "dev": {
+      "dependsOn": ["^build"]
     }
   }
 }
