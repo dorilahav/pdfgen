@@ -10,6 +10,8 @@ export const connect = async (connectionString: string): Promise<AmqpConnection>
   const connection = await amqp.connect(connectionString);
   const channel = await connection.createConfirmChannel();
 
+  await channel.prefetch(1);
+
   return {
     channel,
     connection,
