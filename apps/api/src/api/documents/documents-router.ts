@@ -1,11 +1,13 @@
 import { pdfGenerationJobsQueue } from '@pdfgen/queuing';
 import { Hono } from 'hono';
-import { v4 as createUuid } from 'uuid';
+import { PdfDocument } from '../../models';
 
 export const documentsRouter = new Hono();
 
 documentsRouter.post('/', async c => {
-  const jobId = createUuid();
+  const pdfDocument = await new PdfDocument().save();
+  const jobId = pdfDocument._id.toString();
+  
   await pdfGenerationJobsQueue.publish(jobId, {});
   return c.json({jobId});
-})
+});

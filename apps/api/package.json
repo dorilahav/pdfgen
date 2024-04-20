@@ -9,7 +9,7 @@
     "@hono/node-server": "^1.10.0",
     "@pdfgen/queuing": "*",
     "hono": "^4.2.3",
-    "uuid": "^9.0.1"
+    "mongoose": "^8.3.2"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
