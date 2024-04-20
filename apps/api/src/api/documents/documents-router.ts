@@ -1,9 +1,10 @@
 import { zValidator } from '@hono/zod-validator';
 import { pdfGenerationJobsQueue } from '@pdfgen/queuing';
+import { lstat, readFile } from 'fs/promises';
 import { Hono } from 'hono';
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
-import { PdfDocument } from '../../models';
+import { PdfDocument, PdfDocumentStatus } from '../../models';
 
 export const documentsRouter = new Hono();
 
@@ -26,6 +27,32 @@ documentsRouter.get('/:id',
       return c.notFound();
     }
 
-    return c.json(pdfDocument.toJSON());
+    return c.json(pdfDocument.toJSON(), {status: 202});
+  }
+);
+
+documentsRouter.get('/:id/download',
+  zValidator('param', z.object({id: z.string().refine(x => isValidObjectId(x))})),
+  async c => {
+    const {id: documentId} = c.req.valid('param');
+
+    const pdfDocument = await PdfDocument.findById(documentId);
+
+    if (!pdfDocument || pdfDocument.status !== PdfDocumentStatus.Created) {
+      return c.notFound();
+    }
+
+    const filePath = "E:\\Users\\user\\Downloads\\טכנאי315539.pdf";
+
+    // TODO: Change file reading to be chunked for big files.
+    const [{size}, file] = await Promise.all([
+      lstat(filePath),
+      readFile(filePath)
+    ]);
+    
+    c.header('Content-Type', 'application/pdf');
+    c.header('Content-Length', size.toString());
+
+    return c.body(file);
   }
 )

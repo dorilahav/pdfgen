@@ -1,1 +1,1 @@
-export { PdfDocument } from './pdf-document';
+export { PdfDocument, PdfDocumentStatus } from './pdf-document';
