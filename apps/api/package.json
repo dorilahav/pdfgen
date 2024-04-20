@@ -7,9 +7,11 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.10.0",
+    "@hono/zod-validator": "^0.2.1",
     "@pdfgen/queuing": "*",
     "hono": "^4.2.3",
-    "mongoose": "^8.3.2"
+    "mongoose": "^8.3.2",
+    "zod": "^3.22.5"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",

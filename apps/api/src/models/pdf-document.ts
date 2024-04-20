@@ -24,4 +24,12 @@ const PdfDocumentSchema = new Schema<PdfDocument>({
   }
 }, {virtuals: true});
 
+PdfDocumentSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform(doc, ret, options) {
+    delete ret._id;
+  },
+});
+
 export const PdfDocument = model('PdfDocument', PdfDocumentSchema, 'pdf-documents');
