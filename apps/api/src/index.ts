@@ -40,5 +40,6 @@ const start = async (): Promise<AddressInfo> => {
 
 start()
   .then(info => {
+    // TODO: logging
     console.log(`Server is running on port ${info.port}`)
   });

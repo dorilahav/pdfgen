@@ -1,5 +1,7 @@
 import { connectToAmqp, pdfGenerationJobsQueue } from '@pdfgen/queuing';
 
+import pdfGenerationJobWorker from './pdf-generation-job-worker';
+
 const initQueuing = async () => {
   const connection = await connectToAmqp('amqp://localhost');
 
@@ -7,19 +9,12 @@ const initQueuing = async () => {
 }
 
 const startListening = async () => {
-  await pdfGenerationJobsQueue.subscribe((jobId) => {
-    console.log(`Processing job ${jobId}`);
-
-    return new Promise(resolve => {
-      setTimeout(resolve, 5000);
-    }).then(() => {
-      console.log(`Finished job ${jobId}`);
-    })
-  })
+  await pdfGenerationJobsQueue.subscribe(pdfGenerationJobWorker);
 }
 
 initQueuing()
   .then(startListening)
   .then(() => {
+    // TODO: logging
     console.log('Done!');
   });

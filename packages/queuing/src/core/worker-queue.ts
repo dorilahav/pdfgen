@@ -2,13 +2,14 @@ import { ConfirmChannel, Options } from 'amqplib';
 
 import { AmqpConnection } from './connect';
 
-type CallbackFunction<T> = (jobId: string, content: T) => Promise<void>;
+type AckFunction = () => void;
+export type Worker<T> = (jobId: string, content: T, ack: AckFunction) => Promise<void>;
 type SubscriptionId = string;
 
 export interface WorkerQueue<T> {
   init: (connection: AmqpConnection) => Promise<void>;
   publish: (jobId: string, content: T) => Promise<void>;
-  subscribe: (callback: CallbackFunction<T>) => Promise<SubscriptionId>;
+  subscribe: (worker: Worker<T>) => Promise<SubscriptionId>;
 }
 
 interface DeadLetterOptions {
@@ -82,7 +83,7 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
         });
       });
     },
-    async subscribe(callback) {
+    async subscribe(worker) {
       assertInitialized();
 
       const consumeOptions: Options.Consume = {
@@ -91,18 +92,21 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
         
       const consumer = await channel.consume(queueName, async message => {
         if (!message) {
+          // TODO: logging
           console.error(`Got empty message from queue: ${queueName}`);
           return;
         }
 
+        // TODO: logging
+        console.log('Got message from rabbit:');
+        console.log(message);
+
         const content = deserializeJsonContent<T>(message.content);
         const jobId = message.properties.correlationId;
 
-        try {
-          await callback(jobId, content);
-        } finally {
-          channel.ack(message);
-        }
+        const ack = () => channel.ack(message);
+
+        await worker(jobId, content, ack);
       }, consumeOptions);
 
       return consumer.consumerTag;
