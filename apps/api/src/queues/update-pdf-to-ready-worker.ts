@@ -1,9 +1,9 @@
-import { Worker } from '@pdfgen/queuing';
+import { PdfGeneratedMessageContent, Worker } from '@pdfgen/queuing';
 import { PdfDocument, PdfDocumentStatus } from '../models';
 
-const updatePdfToGeneratedWorker: Worker<{}> = async (pdfId, content, ack) => {
+const updatePdfToReadyWorker: Worker<PdfGeneratedMessageContent> = async (pdfId, content, ack) => {
   // TODO: logging
-  console.log(`Updating pdf ${pdfId} status to generated...`);
+  console.log(`Updating pdf ${pdfId} status to ready...`);
   const pdfDocument = await PdfDocument.findById(pdfId);
 
   if (!pdfDocument) {
@@ -19,9 +19,9 @@ const updatePdfToGeneratedWorker: Worker<{}> = async (pdfId, content, ack) => {
   await pdfDocument.save();
 
   // TODO: logging
-  console.log(`Updated pdf ${pdfId} status to generated!`);
+  console.log(`Updated pdf ${pdfId} status to ready!`);
 
   ack();
 }
 
-export default updatePdfToGeneratedWorker;
+export default updatePdfToReadyWorker;

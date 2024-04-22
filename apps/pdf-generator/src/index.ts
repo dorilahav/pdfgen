@@ -1,4 +1,4 @@
-import { connectToAmqp, pdfGeneratedQueue, pdfRequestedQueue } from '@pdfgen/queuing';
+import { connectToAmqp, pdfGeneratedQueue, pdfGenerateStartedQueue, pdfRequestedQueue } from '@pdfgen/queuing';
 
 import createPdfWorker from './generate-pdf-worker';
 
@@ -6,6 +6,7 @@ const initQueuing = async () => {
   const connection = await connectToAmqp('amqp://localhost');
 
   await pdfRequestedQueue.init(connection);
+  await pdfGenerateStartedQueue.init(connection);
   await pdfGeneratedQueue.init(connection);
 }
 
