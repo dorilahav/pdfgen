@@ -1,5 +1,9 @@
 import { createWorkerQueue } from './core';
 
-const queueName = 'pdf-generation-jobs';
+const pdfRequestedQueueName = 'pdf-requested';
 
-export const pdfGenerationJobsQueue = createWorkerQueue<{}>(queueName);
+export const pdfRequestedQueue = createWorkerQueue<{}>(pdfRequestedQueueName);
+
+const pdfGeneratedQueueName = 'pdf-generated';
+
+export const pdfGeneratedQueue = createWorkerQueue<{}>(pdfGeneratedQueueName);

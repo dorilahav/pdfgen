@@ -1,5 +1,5 @@
 import { zValidator } from '@hono/zod-validator';
-import { pdfGenerationJobsQueue } from '@pdfgen/queuing';
+import { pdfRequestedQueue } from '@pdfgen/queuing';
 import { lstat, readFile } from 'fs/promises';
 import { Hono } from 'hono';
 import { isValidObjectId } from 'mongoose';
@@ -12,7 +12,7 @@ documentsRouter.post('/', async c => {
   const pdfDocument = await new PdfDocument().save();
   const jobId = pdfDocument._id.toString();
   
-  await pdfGenerationJobsQueue.publish(jobId, {});
+  await pdfRequestedQueue.publish(jobId, {});
   return c.json({jobId});
 });
 
@@ -38,7 +38,7 @@ documentsRouter.get('/:id/download',
 
     const pdfDocument = await PdfDocument.findById(documentId);
 
-    if (!pdfDocument || pdfDocument.status !== PdfDocumentStatus.Created) {
+    if (!pdfDocument || pdfDocument.status !== PdfDocumentStatus.Ready) {
       return c.notFound();
     }
 

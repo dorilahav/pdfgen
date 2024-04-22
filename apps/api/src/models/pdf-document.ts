@@ -3,10 +3,10 @@ import { model, Schema } from 'mongoose';
 export enum PdfDocumentStatus {
   // This status represents that a document is waiting to be processed. Before it was picked up by an agent.
   Pending = 1,
-  // This status represents that an agent is currently processing the document.
-  Processing,
-  // This status represents that the document has finished processing and it can be accessed.
-  Created
+  // This status represents that an agent is currently generating the document.
+  Generating,
+  // This status represents that the document has finished generating and it can be accessed.
+  Ready
 }
 
 export interface PdfDocument {

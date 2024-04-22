@@ -1,15 +1,16 @@
-import { connectToAmqp, pdfGenerationJobsQueue } from '@pdfgen/queuing';
+import { connectToAmqp, pdfGeneratedQueue, pdfRequestedQueue } from '@pdfgen/queuing';
 
-import pdfGenerationJobWorker from './pdf-generation-job-worker';
+import createPdfWorker from './generate-pdf-worker';
 
 const initQueuing = async () => {
   const connection = await connectToAmqp('amqp://localhost');
 
-  await pdfGenerationJobsQueue.init(connection);
+  await pdfRequestedQueue.init(connection);
+  await pdfGeneratedQueue.init(connection);
 }
 
 const startListening = async () => {
-  await pdfGenerationJobsQueue.subscribe(pdfGenerationJobWorker);
+  await pdfRequestedQueue.subscribe(createPdfWorker);
 }
 
 initQueuing()
