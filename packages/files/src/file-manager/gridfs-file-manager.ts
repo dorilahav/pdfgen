@@ -7,8 +7,7 @@ const mapGridFsFileToFile = (gridFsFile: GridFSFile): PersistedFile => ({
   id: gridFsFile._id.toString(),
   name: gridFsFile.filename,
   size: gridFsFile.length,
-  uploadDate: gridFsFile.uploadDate,
-  ownerId: gridFsFile.metadata!.ownerId
+  uploadDate: gridFsFile.uploadDate
 });
 
 export const createGridFsFileManager = (mongoDatabase: Db, options?: GridFSBucketOptions): FileManager => {
@@ -26,8 +25,8 @@ export const createGridFsFileManager = (mongoDatabase: Db, options?: GridFSBucke
     return mapGridFsFileToFile(arrayWithFile[0]);
   }
 
-  const upload = async (fileName: string, fileStream: Readable, ownerId: string): Promise<PersistedFile> => {
-    const uploadStream = bucket.openUploadStream(fileName, {metadata: {ownerId}});
+  const upload = async (fileName: string, fileStream: Readable): Promise<PersistedFile> => {
+    const uploadStream = bucket.openUploadStream(fileName);
 
     fileStream.pipe(uploadStream);
     

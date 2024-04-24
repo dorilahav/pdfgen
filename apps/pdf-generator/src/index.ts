@@ -1,5 +1,6 @@
 import { connectToAmqp, pdfGeneratedQueue, pdfGenerateStartedQueue, pdfRequestedQueue } from '@pdfgen/queuing';
 
+import { initializeFileManager } from './file-manager';
 import createPdfWorker from './generate-pdf-worker';
 
 const initQueuing = async () => {
@@ -14,7 +15,8 @@ const startListening = async () => {
   await pdfRequestedQueue.subscribe(createPdfWorker);
 }
 
-initQueuing()
+initializeFileManager()
+  .then(initQueuing)
   .then(startListening)
   .then(() => {
     // TODO: logging

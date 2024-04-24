@@ -16,6 +16,8 @@ const updatePdfToReadyWorker: Worker<PdfGeneratedMessageContent> = async (pdfId,
   }
 
   pdfDocument.status = PdfDocumentStatus.Ready;
+  pdfDocument.fileId = content.fileId;
+  
   await pdfDocument.save();
 
   // TODO: logging

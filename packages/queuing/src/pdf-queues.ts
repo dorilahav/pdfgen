@@ -7,7 +7,9 @@ const pdfRequestedQueueName = 'pdf-requested';
 export const pdfRequestedQueue = createWorkerQueue<PdfRequestedMessageContent>(pdfRequestedQueueName);
 
 
-export interface PdfGeneratedMessageContent {}
+export interface PdfGeneratedMessageContent {
+  fileId: string;
+}
 
 const pdfGeneratedQueueName = 'pdf-generated';
 

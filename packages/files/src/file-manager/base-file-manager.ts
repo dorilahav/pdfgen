@@ -5,12 +5,11 @@ export interface PersistedFile {
   name: string;
   size: number;
   uploadDate: Date;
-  ownerId: string;
 }
 
 export interface FileManager {
   getById: (id: string) => Promise<PersistedFile | null>;
-  upload: (fileName: string, fileStream: Readable, ownerId: string) => Promise<PersistedFile>;
+  upload: (fileName: string, fileStream: Readable) => Promise<PersistedFile>;
   downloadAsStream: (idOrFile: string | PersistedFile) => Readable;
 }
 

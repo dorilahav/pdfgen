@@ -6,7 +6,9 @@
     "start": "node ./dist"
   },
   "dependencies": {
-    "@pdfgen/queuing": "*"
+    "@pdfgen/files": "*",
+    "@pdfgen/queuing": "*",
+    "mongodb": "^6.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",

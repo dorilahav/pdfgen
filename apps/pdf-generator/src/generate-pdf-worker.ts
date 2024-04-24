@@ -1,4 +1,6 @@
 import { PdfRequestedMessageContent, Worker, pdfGenerateStartedQueue, pdfGeneratedQueue } from '@pdfgen/queuing';
+import { createReadStream } from 'fs';
+import { fileManager } from './file-manager';
 
 const createPdfWorker: Worker<PdfRequestedMessageContent> = async (pdfId, content, ack) => {
   // TODO: logging
@@ -7,10 +9,13 @@ const createPdfWorker: Worker<PdfRequestedMessageContent> = async (pdfId, conten
   await pdfGenerateStartedQueue.publish(pdfId, {});
 
   await new Promise(resolve => {
-    setTimeout(resolve, 10000);
+    setTimeout(resolve, 1000);
   });
 
-  await pdfGeneratedQueue.publish(pdfId, {});
+  const filePath = "E:\\Users\\user\\Downloads\\טכנאי315539.pdf";
+  const persistedFile = await fileManager.upload('test.pdf', createReadStream(filePath));
+
+  await pdfGeneratedQueue.publish(pdfId, {fileId: persistedFile.id});
 
   // TODO: logging
   console.log(`Generated pdf ${pdfId}!`);

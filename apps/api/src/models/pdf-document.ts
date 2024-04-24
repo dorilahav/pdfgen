@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose';
+import { model, Schema, Types } from 'mongoose';
 
 export enum PdfDocumentStatus {
   // This status represents that a document is waiting to be processed. Before it was picked up by an agent.
@@ -9,9 +9,16 @@ export enum PdfDocumentStatus {
   Ready
 }
 
-export interface PdfDocument {
+interface BasePdfDocument {
   createdAt: Date;
-  status: PdfDocumentStatus;
+  status: Exclude<PdfDocumentStatus, PdfDocumentStatus.Ready>;
+  fileId?: never;
+}
+
+export type PdfDocument = BasePdfDocument | {
+  createdAt: Date;
+  status: PdfDocumentStatus.Ready;
+  fileId: string;
 }
 
 const PdfDocumentSchema = new Schema<PdfDocument>({
@@ -24,14 +31,21 @@ const PdfDocumentSchema = new Schema<PdfDocument>({
     type: Number,
     required: true,
     default: PdfDocumentStatus.Pending
+  },
+  fileId: {
+    type: Types.ObjectId,
+    required() {
+      return this.status === PdfDocumentStatus.Ready;
+    }
   }
 }, {virtuals: true});
 
 PdfDocumentSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,
-  transform(doc, ret, options) {
+  transform(_doc, ret, _options) {
     delete ret._id;
+    delete ret.fileId;
   },
 });
 

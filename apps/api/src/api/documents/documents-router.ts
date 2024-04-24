@@ -1,19 +1,19 @@
 import { zValidator } from '@hono/zod-validator';
 import { pdfRequestedQueue } from '@pdfgen/queuing';
-import { lstat, readFile } from 'fs/promises';
 import { Hono } from 'hono';
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
+import { fileManager } from '../../file-manager';
 import { PdfDocument, PdfDocumentStatus } from '../../models';
 
 export const documentsRouter = new Hono();
 
 documentsRouter.post('/', async c => {
   const pdfDocument = await new PdfDocument().save();
-  const jobId = pdfDocument._id.toString();
   
-  await pdfRequestedQueue.publish(jobId, {});
-  return c.json({jobId});
+  await pdfRequestedQueue.publish(pdfDocument.id, {});
+
+  return c.json(pdfDocument.toJSON(), {status: 202});
 });
 
 documentsRouter.get('/:id',
@@ -27,7 +27,7 @@ documentsRouter.get('/:id',
       return c.notFound();
     }
 
-    return c.json(pdfDocument.toJSON(), {status: 202});
+    return c.json(pdfDocument.toJSON(), {status: 200});
   }
 );
 
@@ -42,17 +42,20 @@ documentsRouter.get('/:id/download',
       return c.notFound();
     }
 
-    const filePath = "E:\\Users\\user\\Downloads\\טכנאי315539.pdf";
+    const fileDetails = await fileManager.getById(pdfDocument.fileId);
 
-    // TODO: Change file reading to be chunked for big files.
-    const [{size}, file] = await Promise.all([
-      lstat(filePath),
-      readFile(filePath)
-    ]);
-    
-    c.header('Content-Type', 'application/pdf');
-    c.header('Content-Length', size.toString());
+    if (!fileDetails) {
+      // TODO: logging
+      console.error('Trying to query pdf-document with file that does not exist!');
+      return c.notFound();
+    }
 
-    return c.body(file);
+    const fileReadStream = fileManager.downloadAsStream(pdfDocument.fileId);
+    const response = new Response(fileReadStream as any, {status: 200});
+
+    response.headers.append('Content-Type', 'application/pdf');
+    response.headers.append('Content-Length', fileDetails.size.toString());
+
+    return response;
   }
 )
