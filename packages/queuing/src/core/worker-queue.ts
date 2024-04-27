@@ -1,3 +1,4 @@
+import { logger } from '@pdfgen/logging';
 import { ConfirmChannel, Options } from 'amqplib';
 
 import { AmqpConnection } from './connect';
@@ -92,14 +93,15 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
         
       const consumer = await channel.consume(queueName, async message => {
         if (!message) {
-          // TODO: logging
-          console.error(`Got empty message from queue: ${queueName}`);
+          logger.fatal(`Got empty message from queue: ${queueName}`);
+          
           return;
         }
 
-        // TODO: logging
-        console.log('Got message from rabbit:');
-        console.log(message);
+        logger.debug({
+          msg: 'Got message from rabbit:',
+          data: message
+        });
 
         const content = deserializeJsonContent<T>(message.content);
         const jobId = message.properties.correlationId;

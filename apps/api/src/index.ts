@@ -1,10 +1,12 @@
 import { serve } from '@hono/node-server';
+import { initLogging, logger } from '@pdfgen/logging';
 import { Hono } from 'hono';
-import { logger } from 'hono/logger';
+import { logger as loggingMiddleware } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import { connect as connectMongoose } from 'mongoose';
 
 import { AddressInfo } from 'net';
+import * as path from 'path';
 import { apiRouter } from './api';
 import { initializeFileManager } from './file-manager';
 import { errorHandler } from './middlewares';
@@ -12,7 +14,10 @@ import { initQueuing } from './queues';
 
 const app = new Hono();
 
-app.use(logger());
+app.use(loggingMiddleware(log => {
+  logger.debug(log);
+}));
+
 app.use(secureHeaders());
 app.route('/api/v1', apiRouter);
 app.onError(errorHandler);
@@ -45,8 +50,20 @@ const start = async (): Promise<AddressInfo> => {
   })
 }
 
+try {
+  initLogging({
+    logFilePath: path.join('logs', 'app.log'),
+    dev: true,
+    debug: true
+  });
+} catch (error) {
+  throw new Error('An error has occurred while trying to initialize logger', {cause: error});
+}
+
 start()
   .then(info => {
-    // TODO: logging
-    console.log(`Server is running on port ${info.port}`)
-  });
+    logger.info(`Api is running on port ${info.port}`)
+  })
+  .catch(error => {
+    logger.fatal(error);
+  })

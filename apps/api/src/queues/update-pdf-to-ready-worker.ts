@@ -1,16 +1,15 @@
+import { logger } from '@pdfgen/logging';
 import { PdfGeneratedMessageContent, Worker } from '@pdfgen/queuing';
 import { PdfDocument, PdfDocumentStatus } from '../models';
 
 const updatePdfToReadyWorker: Worker<PdfGeneratedMessageContent> = async (pdfId, content, ack) => {
-  // TODO: logging
-  console.log(`Updating pdf ${pdfId} status to ready...`);
+  logger.info(`Updating pdf ${pdfId} status to ready...`);
+  
   const pdfDocument = await PdfDocument.findById(pdfId);
 
   if (!pdfDocument) {
     // TODO: this case.
-
-    // TODO: logging
-    console.error(`Could not find pdf ${pdfId}!`);
+    logger.error(`Could not find pdf ${pdfId}!`);
     
     return;
   }
@@ -20,8 +19,7 @@ const updatePdfToReadyWorker: Worker<PdfGeneratedMessageContent> = async (pdfId,
   
   await pdfDocument.save();
 
-  // TODO: logging
-  console.log(`Updated pdf ${pdfId} status to ready!`);
+  logger.info(`Updated pdf ${pdfId} status to ready!`);
 
   ack();
 }

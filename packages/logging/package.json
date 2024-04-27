@@ -1,5 +1,5 @@
 {
-  "name": "@pdfgen/queuing",
+  "name": "@pdfgen/logging",
   "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
@@ -11,12 +11,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/amqplib": "^0.10.5",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@pdfgen/logging": "*",
-    "amqplib": "^0.10.4"
+    "pino": "^9.0.0",
+    "pino-pretty": "^11.0.0"
   }
 }

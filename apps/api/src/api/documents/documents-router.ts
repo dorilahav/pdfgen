@@ -1,4 +1,5 @@
 import { zValidator } from '@hono/zod-validator';
+import { logger } from '@pdfgen/logging';
 import { pdfRequestedQueue } from '@pdfgen/queuing';
 import { Hono } from 'hono';
 import { isValidObjectId } from 'mongoose';
@@ -45,8 +46,7 @@ documentsRouter.get('/:id/download',
     const fileDetails = await fileManager.getById(pdfDocument.fileId);
 
     if (!fileDetails) {
-      // TODO: logging
-      console.error('Trying to query pdf-document with file that does not exist!');
+      logger.error('Trying to query pdf-document with file that does not exist!');
       return c.notFound();
     }
 

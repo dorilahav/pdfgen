@@ -8,6 +8,7 @@
   "dependencies": {
     "@pdfgen/files": "*",
     "@pdfgen/queuing": "*",
+    "@pdfgen/logging": "*",
     "mongodb": "^6.5.0"
   },
   "devDependencies": {
