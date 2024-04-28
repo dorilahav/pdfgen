@@ -1,6 +1,6 @@
+import { promisifyStream } from '@pdfgen/utils';
 import { Db, GridFSBucket, GridFSBucketOptions, GridFSFile, ObjectId } from 'mongodb';
 import { Readable } from 'stream';
-import { promisifyStream } from '../utils';
 import { FileManager, getIdFromIdOrFile, PersistedFile } from './base-file-manager';
 
 const mapGridFsFileToFile = (gridFsFile: GridFSFile): PersistedFile => ({

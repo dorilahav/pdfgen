@@ -1,5 +1,5 @@
 {
-  "name": "@pdfgen/files",
+  "name": "@pdfgen/utils",
   "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
@@ -13,9 +13,5 @@
   "devDependencies": {
     "tsup": "^8.0.2",
     "typescript": "^5.4.5"
-  },
-  "dependencies": {
-    "@pdfgen/utils": "*",
-    "mongodb": "^6.5.0"
   }
 }
