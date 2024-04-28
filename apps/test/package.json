@@ -1,0 +1,19 @@
+{
+  "name": "@pdfgen/test",
+  "scripts": {
+    "dev": "tsx watch src/index.tsx",
+    "build": "tsc",
+    "start": "node ./dist"
+  },
+  "dependencies": {
+    "@pdfgen/logging": "*",
+    "@pdfgen/utils": "*",
+    "@react-pdf/renderer": "^3.4.4",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "@types/react": "^18.3.1",
+    "tsx": "^4.7.1"
+  }
+}
