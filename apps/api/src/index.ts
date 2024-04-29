@@ -51,10 +51,12 @@ const start = async (): Promise<AddressInfo> => {
 }
 
 try {
+  // TODO: update fields based on environment
   initLogging({
     logFilePath: path.join('logs', 'app.log'),
     dev: true,
-    debug: true
+    debug: true,
+    environment: 'development'
   });
 } catch (error) {
   throw new Error('An error has occurred while trying to initialize logger', {cause: error});

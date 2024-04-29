@@ -1,11 +1,15 @@
 import pino, { TransportTargetOptions } from 'pino';
 
-interface MessageWithData {
-  msg: string;
-  data: object;
+interface StructuredMessage {
+  msg?: string;
+  data?: object;
+  err?: unknown;
+  context?: object;
 }
 
-type LogFunction = (content: Error | string | MessageWithData) => void;
+type MessageContent = Error | string | StructuredMessage;
+
+type LogFunction = (content: MessageContent) => void;
 
 interface Logger {
   debug: LogFunction;
@@ -22,6 +26,11 @@ interface LoggerOptions {
    * The destination logging file.
    */
   logFilePath: string;
+
+  /**
+   * The current environment to display in logs
+   */
+  environment: string;
 
   /**
    * Turns on some development features like pretty logging to console.
@@ -49,7 +58,10 @@ export const initLogging = (options: LoggerOptions) => {
   if (options.dev) {
     targets.push({
       target: 'pino-pretty',
-      level: options.debug ? 'debug' : minimumLevel
+      level: options.debug ? 'debug' : minimumLevel,
+      options: {
+        ignore: 'environment'
+      }
     });
   }
 
@@ -57,6 +69,9 @@ export const initLogging = (options: LoggerOptions) => {
     transport: {
       targets
     },
-    level: options.debug ? 'debug' : minimumLevel
+    level: options.debug ? 'debug' : minimumLevel,
+    base: {
+      environment: options.environment
+    }
   });
 }

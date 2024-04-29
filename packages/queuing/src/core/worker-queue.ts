@@ -108,7 +108,12 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
 
         const ack = () => channel.ack(message);
 
-        await worker(jobId, content, ack);
+        try {
+          await worker(jobId, content, ack);
+        } catch (error) {
+          logger.fatal({err: error, context: {jobId}});
+        }
+
       }, consumeOptions);
 
       return consumer.consumerTag;
