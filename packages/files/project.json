@@ -2,7 +2,7 @@
   "namedInputs": {
     "configuration": [
       "{projectRoot}/tsconfig.json",
-      "{projectRoot}/tsup.config.json"
+      "{projectRoot}/tsup.config.ts"
     ]
   }
 }
