@@ -1,10 +1,9 @@
 import { model, Schema, Types } from 'mongoose';
 
 export enum PdfDocumentStatus {
-  // This status represents that a document is waiting to be processed. Before it was picked up by an agent.
-  Pending = 1,
-  // This status represents that an agent is currently generating the document.
-  Generating,
+  // This status represents that a document is being generated and is not yet ready for download.
+  Generating = 1,
+
   // This status represents that the document has finished generating and it can be accessed.
   Ready
 }
@@ -30,7 +29,7 @@ const PdfDocumentSchema = new Schema<PdfDocument>({
   status: {
     type: Number,
     required: true,
-    default: PdfDocumentStatus.Pending
+    default: PdfDocumentStatus.Generating
   },
   fileId: {
     type: Types.ObjectId,

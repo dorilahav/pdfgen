@@ -1,33 +1,21 @@
 import { initLogging } from '@pdfgen/logging';
-import { promisifyStream } from '@pdfgen/utils';
 import layoutDocument from '@react-pdf/layout';
 import PDFDocument from '@react-pdf/pdfkit';
 import renderPDF from '@react-pdf/render';
 import { Font, pdf } from '@react-pdf/renderer';
-import { createWriteStream } from 'fs';
 import * as path from 'path';
 import * as React from 'react';
-import { Writable } from 'stream';
-import Resume from './resume';
+import { Pdf } from './shit';
 
+// TODO: update fields based on environment
 initLogging({
   logFilePath: path.join('logs', 'app.log'),
   dev: true,
-  debug: true
+  debug: true,
+  environment: 'development'
 });
 
-const element = <Resume/>;
-
-const pdfDocument = pdf(element);
-
-const container = pdfDocument.container;
-
-interface ReactPdfContainer {
-  type: 'ROOT';
-  document: any;
-}
-
-const createPdf = async (container: ReactPdfContainer) => {
+export const generatePdf = async (container: any) => {
   const ctx = new PDFDocument({
     compress: true,
     displayTitle: true,
@@ -38,16 +26,26 @@ const createPdf = async (container: ReactPdfContainer) => {
   const pdfReadStream = renderPDF(ctx, layout);
 
   return {
-    pipeToWritable(writeStream: Writable): Promise<void> {
-      pdfReadStream.pipe(writeStream);
-
-      return promisifyStream(writeStream);
-    }
+    pdfReadStream
   }
 }
 
-const writeStream = createWriteStream('./shit.pdf');
+const element = (
+  <Pdf/>
+);
 
-createPdf(container)
-  .then(x => x.pipeToWritable(writeStream))
-  .then(() => console.log('Done Generating Pdf!'));
+const pdfDocument = pdf(element);
+
+const container = pdfDocument.container;
+
+console.log(JSON.stringify(container, null, 2));
+
+// const writeStream = createWriteStream('./shit.pdf');
+
+// generatePdf(container)
+//   .then(x => {
+//     x.pdfReadStream.pipe(writeStream);
+
+//     return promisifyStream(writeStream);
+//   })
+//   .then(() => console.log('Done Generating Pdf!'));

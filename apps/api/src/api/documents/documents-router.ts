@@ -9,13 +9,17 @@ import { PdfDocument, PdfDocumentStatus } from '../../models';
 
 export const documentsRouter = new Hono();
 
-documentsRouter.post('/', async c => {
-  const pdfDocument = await new PdfDocument().save();
-  
-  await pdfRequestedQueue.publish(pdfDocument.id, {});
+documentsRouter.post('/',
+  zValidator('json', z.object({}).passthrough()),
+  async c => {
+    const pdfContent = c.req.valid('json');
+    const pdfDocument = await new PdfDocument().save();
+    
+    await pdfRequestedQueue.publish(pdfDocument.id, pdfContent);
 
-  return c.json(pdfDocument.toJSON(), {status: 202});
-});
+    return c.json(pdfDocument.toJSON(), {status: 202});
+  }
+);
 
 documentsRouter.get('/:id',
   zValidator('param', z.object({id: z.string().refine(x => isValidObjectId(x))})),

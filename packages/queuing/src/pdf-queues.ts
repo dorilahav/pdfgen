@@ -14,10 +14,3 @@ export interface PdfGeneratedMessageContent {
 const pdfGeneratedQueueName = 'pdf-generated';
 
 export const pdfGeneratedQueue = createWorkerQueue<PdfGeneratedMessageContent>(pdfGeneratedQueueName);
-
-
-export interface PdfGenerateStartedMessageContent {}
-
-const pdfGenerateStartedQueueName = 'pdf-generate-started';
-
-export const pdfGenerateStartedQueue = createWorkerQueue<PdfGenerateStartedMessageContent>(pdfGenerateStartedQueueName);

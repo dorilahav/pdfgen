@@ -2,14 +2,13 @@ import { logger } from '@pdfgen/logging';
 import { PdfGeneratedMessageContent, Worker } from '@pdfgen/queuing';
 import { PdfDocument, PdfDocumentStatus } from '../models';
 
-const updatePdfToReadyWorker: Worker<PdfGeneratedMessageContent> = async (pdfId, content, ack) => {
+const markPdfReady: Worker<PdfGeneratedMessageContent> = async (pdfId, content, ack) => {
   logger.info(`Updating pdf ${pdfId} status to ready...`);
   
   const pdfDocument = await PdfDocument.findById(pdfId);
 
   if (!pdfDocument) {
-    // TODO: this case.
-    logger.error(`Could not find pdf ${pdfId}!`);
+    logger.error(`Cannot mark pdf ${pdfId} Ready because it was not found in the DB! This might indicate that there's a bug.`);
     
     return;
   }
@@ -19,9 +18,9 @@ const updatePdfToReadyWorker: Worker<PdfGeneratedMessageContent> = async (pdfId,
   
   await pdfDocument.save();
 
-  logger.info(`Updated pdf ${pdfId} status to ready!`);
+  logger.info(`Marked pdf ${pdfId} as ready!`);
 
   ack();
 }
 
-export default updatePdfToReadyWorker;
+export default markPdfReady;

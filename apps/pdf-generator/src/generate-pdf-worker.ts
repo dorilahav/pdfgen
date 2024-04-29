@@ -1,19 +1,13 @@
 import { logger } from '@pdfgen/logging';
-import { PdfRequestedMessageContent, Worker, pdfGenerateStartedQueue, pdfGeneratedQueue } from '@pdfgen/queuing';
-import { createReadStream } from 'fs';
+import { PdfRequestedMessageContent, Worker, pdfGeneratedQueue } from '@pdfgen/queuing';
 import { fileManager } from './file-manager';
+import { generatePdf } from './generate-pdf';
 
 const createPdfWorker: Worker<PdfRequestedMessageContent> = async (pdfId, content, ack) => {
   logger.info(`Generating pdf ${pdfId}...`);
 
-  await pdfGenerateStartedQueue.publish(pdfId, {});
-
-  await new Promise(resolve => {
-    setTimeout(resolve, 1000);
-  });
-
-  const filePath = "E:\\Users\\user\\Downloads\\טכנאי315539.pdf";
-  const persistedFile = await fileManager.upload('test.pdf', createReadStream(filePath));
+  const generatedPdf = await generatePdf(content as any); // TODO: fix this type
+  const persistedFile = await fileManager.upload(`${pdfId}.pdf`, generatedPdf.pdfReadStream);
 
   logger.info(`Generated pdf ${pdfId}!`);
   

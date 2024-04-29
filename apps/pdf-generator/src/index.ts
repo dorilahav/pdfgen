@@ -1,4 +1,4 @@
-import { connectToAmqp, pdfGeneratedQueue, pdfGenerateStartedQueue, pdfRequestedQueue } from '@pdfgen/queuing';
+import { connectToAmqp, pdfGeneratedQueue, pdfRequestedQueue } from '@pdfgen/queuing';
 
 import { initLogging, logger } from '@pdfgen/logging';
 import * as path from 'path';
@@ -9,7 +9,6 @@ const initQueuing = async () => {
   const connection = await connectToAmqp('amqp://localhost');
 
   await pdfRequestedQueue.init(connection);
-  await pdfGenerateStartedQueue.init(connection);
   await pdfGeneratedQueue.init(connection);
 }
 
