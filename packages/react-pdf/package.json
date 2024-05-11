@@ -1,5 +1,5 @@
 {
-  "name": "@pdfgen/queuing",
+  "name": "@pdfgen/react-pdf",
   "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
@@ -11,13 +11,15 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/amqplib": "^0.10.5",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@pdfgen/logging": "*",
-    "@pdfgen/react-pdf": "*",
-    "amqplib": "^0.10.4"
+    "@react-pdf/layout": "^3.12.1",
+    "@react-pdf/pdfkit": "^3.1.10",
+    "@react-pdf/primitives": "^3.1.1",
+    "@react-pdf/render": "^3.4.4",
+    "@react-pdf/renderer": "^3.4.4",
+    "zod": "^3.23.4"
   }
 }

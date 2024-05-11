@@ -10,10 +10,7 @@
     "@pdfgen/logging": "*",
     "@pdfgen/queuing": "*",
     "@pdfgen/utils": "*",
-    "@react-pdf/layout": "^3.12.1",
-    "@react-pdf/pdfkit": "^3.1.10",
-    "@react-pdf/render": "^3.4.4",
-    "@react-pdf/renderer": "^3.4.4",
+    "@pdfgen/react-pdf": "*",
     "mongodb": "^6.5.0"
   },
   "devDependencies": {

@@ -38,7 +38,7 @@ const pdfDocument = pdf(element);
 
 const container = pdfDocument.container;
 
-console.log(JSON.stringify(container, null, 2));
+console.log(container.document.children[0].children);
 
 // const writeStream = createWriteStream('./shit.pdf');
 

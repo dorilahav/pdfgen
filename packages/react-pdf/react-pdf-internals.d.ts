@@ -21,12 +21,12 @@ declare module '@react-pdf/pdfkit' {
 }
 
 declare module '@react-pdf/layout' {
-  import { PdfContainer } from '@react-pdf/renderer';
+  import { PdfComponent } from '@react-pdf/renderer';
   import { FontStore } from '@react-pdf/types';
 
   export interface PdfLayout {}
 
-  type LayoutDocument = (container: PdfContainer, fontStore: FontStore) => PdfLayout;
+  type LayoutDocument = (container: PdfComponent, fontStore: FontStore) => PdfLayout;
 
   const layoutDocument: LayoutDocument;
 

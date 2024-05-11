@@ -1,6 +1,9 @@
+import { ReactPdfContainer } from '@pdfgen/react-pdf';
 import { createWorkerQueue } from './core';
 
-export interface PdfRequestedMessageContent {}
+export interface PdfRequestedMessageContent {
+  container: ReactPdfContainer;
+}
 
 const pdfRequestedQueueName = 'pdf-requested';
 

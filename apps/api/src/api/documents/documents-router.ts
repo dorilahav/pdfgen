@@ -1,6 +1,7 @@
 import { zValidator } from '@hono/zod-validator';
 import { logger } from '@pdfgen/logging';
 import { pdfRequestedQueue } from '@pdfgen/queuing';
+import { reactPdfContainerSchema } from '@pdfgen/react-pdf';
 import { Hono } from 'hono';
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
@@ -10,12 +11,12 @@ import { PdfDocument, PdfDocumentStatus } from '../../models';
 export const documentsRouter = new Hono();
 
 documentsRouter.post('/',
-  zValidator('json', z.object({}).passthrough()),
+  zValidator('json', reactPdfContainerSchema),
   async c => {
-    const pdfContent = c.req.valid('json');
+    const pdfContainer = c.req.valid('json');
     const pdfDocument = await new PdfDocument().save();
     
-    await pdfRequestedQueue.publish(pdfDocument.id, pdfContent);
+    await pdfRequestedQueue.publish(pdfDocument.id, {container: pdfContainer});
 
     return c.json(pdfDocument.toJSON(), {status: 202});
   }
