@@ -4,7 +4,9 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "react": "^18.3.1"
+  },
   "devDependencies": {
     "@nx/js": "18.2.4",
     "nx": "18.2.4"

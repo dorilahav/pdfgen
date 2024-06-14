@@ -1,0 +1,21 @@
+{
+  "name": "@pdfgen/sdk",
+  "version": "0.1.0",
+  "description": "An sdk wrapper for pdfgenapi.com api",
+  "main": "dist/index.js",
+  "types": "dist/index.d.mts",
+  "module": "dist/index.mjs",
+  "scripts": {
+    "build": "tsup"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@react-pdf/renderer": "^3.4.4",
+    "axios": ">=1.2.0"
+  }
+}

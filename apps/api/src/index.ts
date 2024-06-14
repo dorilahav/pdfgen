@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server';
 import { initLogging, logger } from '@pdfgen/logging';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { logger as loggingMiddleware } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import { connect as connectMongoose } from 'mongoose';
@@ -16,6 +17,13 @@ const app = new Hono();
 
 app.use(loggingMiddleware(log => {
   logger.debug(log);
+}));
+
+app.use(cors({
+  origin: [
+    'http://localhost:5173' // TODO: change this to production
+  ],
+  allowMethods: ['GET', 'POST', 'OPTIONS']
 }));
 
 app.use(secureHeaders());

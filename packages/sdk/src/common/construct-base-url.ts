@@ -1,0 +1,1 @@
+export const constructBaseUrl = (hostname: string, version: string) => `${hostname}/api/${version}`;

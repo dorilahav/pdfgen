@@ -60,6 +60,7 @@ documentsRouter.get('/:id/download',
 
     response.headers.append('Content-Type', 'application/pdf');
     response.headers.append('Content-Length', fileDetails.size.toString());
+    response.headers.append('Content-Disposition', 'attachment; filename="document.pdf"'); // TODO: Give better name
 
     return response;
   }
