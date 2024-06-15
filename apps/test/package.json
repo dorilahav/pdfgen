@@ -1,5 +1,6 @@
 {
   "name": "@pdfgen/test",
+  "private": true,
   "scripts": {
     "dev": "tsx watch src/index.tsx",
     "build": "tsc",

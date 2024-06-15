@@ -1,5 +1,6 @@
 {
   "name": "@pdfgen/pdf-generator",
+  "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
