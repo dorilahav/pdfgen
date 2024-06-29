@@ -1,4 +1,5 @@
 import { model, Schema, Types } from 'mongoose';
+import { Application } from './application';
 
 export enum PdfDocumentStatus {
   // This status represents that a document is being generated and is not yet ready for download.
@@ -9,18 +10,24 @@ export enum PdfDocumentStatus {
 }
 
 interface BasePdfDocument {
+  ownerApplication: Types.ObjectId;
   createdAt: Date;
   status: Exclude<PdfDocumentStatus, PdfDocumentStatus.Ready>;
   fileId?: never;
 }
 
 export type PdfDocument = BasePdfDocument | {
+  ownerApplication: Types.ObjectId;
   createdAt: Date;
   status: PdfDocumentStatus.Ready;
   fileId: string;
 }
 
 const PdfDocumentSchema = new Schema<PdfDocument>({
+  ownerApplication: {
+    type: Schema.Types.ObjectId,
+    ref: Application.modelName
+  },
   createdAt: {
     type: Date,
     required: true,
@@ -44,6 +51,7 @@ PdfDocumentSchema.set('toJSON', {
   versionKey: false,
   transform(_doc, ret, _options) {
     delete ret._id;
+    delete ret.ownerApplication;
     delete ret.fileId;
   },
 });

@@ -1,0 +1,22 @@
+{
+  "name": "@pdfgen/application-token",
+  "version": "0.1.0",
+  "description": "",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.mts",
+  "module": "dist/index.mjs",
+  "scripts": {
+    "build": "tsup"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@pdfgen/utils": "*",
+    "mongodb": "^6.5.0"
+  }
+}

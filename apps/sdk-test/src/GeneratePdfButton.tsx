@@ -3,7 +3,7 @@ import { Document, Page, Text } from '@react-pdf/renderer';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRef } from 'react';
 
-const api = createPdfGenApiClient({token: 'test-token', hostname: 'http://localhost:3000'})
+const api = createPdfGenApiClient({token: 'NjY3ZWRiNGJlOGFmMWJjMjhiZDA0NTg0.Nzrk3eO-9-BLyZthlcKvEmQGuHw', hostname: 'http://localhost:3000'})
 
 const Pdf = ({text}: {text: string}) => {
   return (
