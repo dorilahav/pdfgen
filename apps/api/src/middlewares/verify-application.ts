@@ -3,6 +3,7 @@ import { logger } from '@pdfgen/logging';
 import { MiddlewareHandler } from 'hono';
 import { isValidObjectId } from 'mongoose';
 import { Application } from '../models';
+import { getApplicationById } from '../repositories/application';
 
 const AUTH_HEADER_SECTIONS_SEPERATOR = ' ';
 
@@ -56,7 +57,7 @@ const getApplicationFromAuthorizationDetails = async ({token}: AuthorizationDeta
     return null;
   }
 
-  return await Application.findById(applicationId);
+  return await getApplicationById(applicationId);
 }
 
 // This function only supports bearer token flow, if some other flows needs to be supported, this function will need to change.

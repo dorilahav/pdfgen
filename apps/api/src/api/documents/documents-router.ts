@@ -7,7 +7,8 @@ import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { fileManager } from '../../file-manager';
 import { verifyApplication } from '../../middlewares';
-import { PdfDocument, PdfDocumentStatus } from '../../models';
+import { PdfDocumentStatus } from '../../models';
+import { createPdfDocument, getPdfDocumentById } from '../../repositories/pdf-documents';
 
 export const documentsRouter = new Hono().use(verifyApplication);
 
@@ -17,9 +18,7 @@ documentsRouter.post('/',
     const pdfContainer = c.req.valid('json');
     const application = c.get('application');
 
-    const pdfDocument = await new PdfDocument({
-      ownerApplication: application.id
-    }).save();
+    const pdfDocument = await createPdfDocument(application.id);
     
     await pdfRequestedQueue.publish(pdfDocument.id, {container: pdfContainer});
 
@@ -33,7 +32,7 @@ documentsRouter.get('/:id',
     const {id: documentId} = c.req.valid('param');
     const application = c.get('application');
 
-    const pdfDocument = await PdfDocument.findById(documentId);
+    const pdfDocument = await getPdfDocumentById(documentId);
 
     if (!pdfDocument || !pdfDocument.ownerApplication.equals(application.id)) {
       return c.notFound();
@@ -49,7 +48,7 @@ documentsRouter.get('/:id/download',
     const {id: documentId} = c.req.valid('param');
     const application = c.get('application');
 
-    const pdfDocument = await PdfDocument.findById(documentId);
+    const pdfDocument = await getPdfDocumentById(documentId);
 
     if (!pdfDocument || !pdfDocument.ownerApplication.equals(application.id) || pdfDocument.status !== PdfDocumentStatus.Ready) {
       return c.notFound();
