@@ -1,1 +1,2 @@
-export { apiRouter } from './api-router';
+export { default } from './api-router';
+

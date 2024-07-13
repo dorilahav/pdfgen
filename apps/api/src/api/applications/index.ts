@@ -1,1 +1,2 @@
-export { applicationsRouter } from './applications-router';
+export { default } from './applications-router';
+

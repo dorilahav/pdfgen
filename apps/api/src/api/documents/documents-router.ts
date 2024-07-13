@@ -6,68 +6,97 @@ import { Hono } from 'hono';
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { fileManager } from '../../file-manager';
-import { verifyApplication } from '../../middlewares';
+import { createAuthorizedApplicationRateLimiter, verifyApplication } from '../../middlewares';
 import { PdfDocumentStatus } from '../../models';
 import { createPdfDocument, getPdfDocumentById } from '../../repositories/pdf-documents';
 
-export const documentsRouter = new Hono().use(verifyApplication);
+export default () => {
+  const createDocumentRateLimiter = createAuthorizedApplicationRateLimiter({
+    prefix: 'create-document',
+    limit: 20 // 20 create documents per minute
+  });
 
-documentsRouter.post('/',
-  zValidator('json', reactPdfContainerSchema),
-  async c => {
-    const pdfContainer = c.req.valid('json');
-    const application = c.get('application');
+  const queryDocumentRateLimiter = createAuthorizedApplicationRateLimiter({
+    prefix: 'query-document',
+    limit: 200 // 20 documents per minute * 5 seconds per document + 100 random queries
+  });
 
-    const pdfDocument = await createPdfDocument(application.id);
-    
-    await pdfRequestedQueue.publish(pdfDocument.id, {container: pdfContainer});
+  const downloadDocumentRateLimiter = createAuthorizedApplicationRateLimiter({
+    prefix: 'download-document',
+    limit: 120 // 20 new documents per minute + 100 random downloads
+  });
 
-    return c.json(pdfDocument.toJSON(), {status: 202});
-  }
-);
+  const idParamsValidationSchema = z.object({id: z.string().refine(x => isValidObjectId(x))});
 
-documentsRouter.get('/:id',
-  zValidator('param', z.object({id: z.string().refine(x => isValidObjectId(x))})),
-  async c => {
-    const {id: documentId} = c.req.valid('param');
-    const application = c.get('application');
+  return new Hono()
+    .use(verifyApplication)
+    .post('/',
+      createDocumentRateLimiter,
+      zValidator('json', reactPdfContainerSchema),
+      async c => {
+        const pdfContainer = c.req.valid('json');
+        const application = c.get('application');
 
-    const pdfDocument = await getPdfDocumentById(documentId);
+        const pdfDocument = await createPdfDocument(application.id);
+        
+        await pdfRequestedQueue.publish(pdfDocument.id, {container: pdfContainer});
 
-    if (!pdfDocument || !pdfDocument.ownerApplication.equals(application.id)) {
-      return c.notFound();
-    }
+        return c.json(pdfDocument.toJSON(), {status: 202});
+      }
+    )
+    .get('/:id',
+      queryDocumentRateLimiter,
+      zValidator('param', idParamsValidationSchema),
+      async c => {
+        const {id: documentId} = c.req.valid('param');
+        const application = c.get('application');
 
-    return c.json(pdfDocument.toJSON(), {status: 200});
-  }
-);
+        const pdfDocument = await getPdfDocumentById(documentId);
 
-documentsRouter.get('/:id/download',
-  zValidator('param', z.object({id: z.string().refine(x => isValidObjectId(x))})),
-  async c => {
-    const {id: documentId} = c.req.valid('param');
-    const application = c.get('application');
+        // TODO: move ownerApplication check to query.
+        if (!pdfDocument || !pdfDocument.ownerApplication.equals(application.id)) {
+          return c.notFound();
+        }
 
-    const pdfDocument = await getPdfDocumentById(documentId);
+        return c.json(pdfDocument.toJSON(), {status: 200});
+      }
+    )
+    .get('/:id/download',
+      downloadDocumentRateLimiter,
+      zValidator('param', idParamsValidationSchema),
+      async c => {
+        const {id: documentId} = c.req.valid('param');
+        const application = c.get('application');
 
-    if (!pdfDocument || !pdfDocument.ownerApplication.equals(application.id) || pdfDocument.status !== PdfDocumentStatus.Ready) {
-      return c.notFound();
-    }
+        const pdfDocument = await getPdfDocumentById(documentId);
 
-    const fileDetails = await fileManager.getById(pdfDocument.fileId);
+        // TODO: move ownerApplication check to query.
+        if (!pdfDocument || !pdfDocument.ownerApplication.equals(application.id) || pdfDocument.status !== PdfDocumentStatus.Ready) {
+          return c.notFound();
+        }
 
-    if (!fileDetails) {
-      logger.error('Trying to query pdf-document with file that does not exist!');
-      return c.notFound();
-    }
+        const fileDetails = await fileManager.getById(pdfDocument.fileId);
 
-    const fileReadStream = fileManager.downloadAsStream(pdfDocument.fileId);
-    const response = new Response(fileReadStream as any, {status: 200});
+        if (!fileDetails) {
+          logger.error({
+            msg: 'Trying to query pdf-document with file that does not exist!',
+            context: {
+              fileId: pdfDocument.fileId,
+              documentId: pdfDocument.id
+            }
+          });
 
-    response.headers.append('Content-Type', 'application/pdf');
-    response.headers.append('Content-Length', fileDetails.size.toString());
-    response.headers.append('Content-Disposition', 'attachment; filename="document.pdf"'); // TODO: Give better name
+          return c.notFound();
+        }
 
-    return response;
-  }
-)
+        const fileReadStream = fileManager.downloadAsStream(pdfDocument.fileId);
+        const response = new Response(fileReadStream as any, {status: 200});
+
+        response.headers.append('Content-Type', 'application/pdf');
+        response.headers.append('Content-Length', fileDetails.size.toString());
+        response.headers.append('Content-Disposition', 'attachment; filename="document.pdf"'); // TODO: Give better name
+
+        return response;
+      }
+    );
+};

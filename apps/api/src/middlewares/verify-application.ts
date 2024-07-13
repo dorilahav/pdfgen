@@ -65,7 +65,7 @@ const isAuthorized = ({token}: AuthorizationDetails, application: Application) =
   return isValidToken(token, application.id, application.secret);
 }
 
-interface ApplicationEnvironment {
+export interface ApplicationEnvironment {
   Variables: {
     application: Application;
   }

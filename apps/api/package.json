@@ -7,15 +7,18 @@
     "start": "node ./dist"
   },
   "dependencies": {
-    "@hono/node-server": "^1.10.0",
+    "@hono/node-server": "^1.12.0",
     "@hono/zod-validator": "^0.2.1",
-    "@pdfgen/queuing": "*",
+    "@pdfgen/application-token": "*",
     "@pdfgen/files": "*",
     "@pdfgen/logging": "*",
+    "@pdfgen/queuing": "*",
     "@pdfgen/react-pdf": "*",
-    "@pdfgen/application-token": "*",
     "hono": "^4.2.3",
+    "hono-rate-limiter": "^0.4.0",
     "mongoose": "^8.3.2",
+    "rate-limit-redis": "^4.2.0",
+    "redis": "^4.6.15",
     "zod": "^3.22.5"
   },
   "devDependencies": {

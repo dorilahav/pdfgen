@@ -1,4 +1,4 @@
-import { serve } from '@hono/node-server';
+import { serve, } from '@hono/node-server';
 import { initLogging, logger } from '@pdfgen/logging';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -8,27 +8,29 @@ import { connect as connectMongoose } from 'mongoose';
 
 import { AddressInfo } from 'net';
 import * as path from 'path';
-import { apiRouter } from './api';
+import apiRouter from './api';
 import { initializeFileManager } from './file-manager';
-import { errorHandler } from './middlewares';
+import { errorHandler, globalRateLimiter, initRateLimit } from './middlewares';
 import { initQueuing } from './queues';
 
-const app = new Hono();
-
-app.use(loggingMiddleware(log => {
-  logger.debug(log);
-}));
-
-app.use(cors({
-  origin: [
-    'http://localhost:5173' // TODO: change this to production
-  ],
-  allowMethods: ['GET', 'POST', 'OPTIONS']
-}));
-
-app.use(secureHeaders());
-app.route('/api/v1', apiRouter);
-app.onError(errorHandler);
+const createApp = () => new Hono()
+  .use(
+    loggingMiddleware(log => {
+      logger.debug(log);
+    })
+  )
+  .use(
+    cors({
+      origin: [
+        'http://localhost:5173' // TODO: change this to production
+      ],
+      allowMethods: ['GET', 'POST', 'OPTIONS']
+    })
+  )
+  .use(secureHeaders())
+  .use(globalRateLimiter())
+  .route('/api/v1', apiRouter())
+  .onError(errorHandler);
 
 const port = 3000
 
@@ -50,6 +52,14 @@ const start = async (): Promise<AddressInfo> => {
   } catch (error) {
     throw new Error('An error occurred while trying to initialize queuing', {cause: error});
   }
+
+  try {
+    await initRateLimit();
+  } catch (error) {
+    throw new Error('An error occurred while trying to initialize rate limiting', {cause: error});
+  }
+
+  const app = createApp();
 
   return new Promise(resolve => {
     serve({fetch: app.fetch, port}, info => {
