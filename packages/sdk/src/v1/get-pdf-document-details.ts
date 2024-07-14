@@ -20,7 +20,7 @@ export const getPdfDocumentDetails = (httpClient: HttpClient): GetPdfDocumentDet
   }
 );
 
-const getErrorFromResponse = async (response: ErrorApiResponse, documentId: Id) => {
+const getErrorFromResponse = (response: ErrorApiResponse, documentId: Id) => {
   if (response.status === 400) {
     const details = response.data;
 
