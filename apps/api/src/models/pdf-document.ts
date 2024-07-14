@@ -6,7 +6,9 @@ export enum PdfDocumentStatus {
   Generating = 1,
 
   // This status represents that the document has finished generating and it can be accessed.
-  Ready
+  Ready,
+
+  Failure
 }
 
 interface BasePdfDocument {

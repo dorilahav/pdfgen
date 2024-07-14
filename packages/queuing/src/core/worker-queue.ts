@@ -3,8 +3,13 @@ import { ConfirmChannel, Options } from 'amqplib';
 
 import { AmqpConnection } from './connect';
 
-type AckFunction = () => void;
-export type Worker<T> = (jobId: string, content: T, ack: AckFunction) => Promise<void>;
+interface AckObject {
+  success: () => void;
+  failure: () => void;
+  requeue: () => void;
+}
+
+export type Worker<T> = (jobId: string, content: T, ack: AckObject, isRedelivered: boolean) => Promise<void>;
 type SubscriptionId = string;
 
 export interface WorkerQueue<T> {
@@ -106,10 +111,14 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
         const content = deserializeJsonContent<T>(message.content);
         const jobId = message.properties.correlationId;
 
-        const ack = () => channel.ack(message);
+        const ack = {
+          success: () => channel.ack(message),
+          failure: () => channel.reject(message),
+          requeue: () => channel.nack(message)
+        }
 
         try {
-          await worker(jobId, content, ack);
+          await worker(jobId, content, ack, message.fields.redelivered);
         } catch (error) {
           logger.fatal({err: error, context: {jobId}});
         }

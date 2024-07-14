@@ -10,14 +10,12 @@ const markPdfReady: Worker<PdfGeneratedMessageContent> = async (pdfId, content, 
   if (!pdfDocument) {
     logger.error(`Cannot mark pdf ${pdfId} Ready because it was not found in the DB! This might indicate that there's a bug.`);
 
-    // TODO: Handle this case, right now it's causing a deadlock
-    
-    return;
+    return ack.failure();
   }
 
   logger.info(`Marked pdf ${pdfId} as ready!`);
 
-  ack();
+  return ack.success();
 }
 
 export default markPdfReady;
