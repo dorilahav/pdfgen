@@ -11,10 +11,12 @@ export const getPdfDocumentById = async (pdfDocumentId: string) => {
 }
 
 export const markPdfDocumentAsReady = async (pdfDocumentId: string, fileId: string) => {
-  return await PdfDocument.findByIdAndUpdate(pdfDocumentId, {
+  const update = {
     $set: {
       fileId,
       status: PdfDocumentStatus.Ready
     }
-  }, {new: true});
+  };
+
+  return await PdfDocument.findByIdAndUpdate(pdfDocumentId, update, {new: true});
 }

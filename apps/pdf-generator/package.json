@@ -10,8 +10,8 @@
     "@pdfgen/files": "*",
     "@pdfgen/logging": "*",
     "@pdfgen/queuing": "*",
-    "@pdfgen/utils": "*",
     "@pdfgen/react-pdf": "*",
+    "@pdfgen/utils": "*",
     "mongodb": "^6.5.0"
   },
   "devDependencies": {

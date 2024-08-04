@@ -14,6 +14,7 @@
     "@pdfgen/logging": "*",
     "@pdfgen/queuing": "*",
     "@pdfgen/react-pdf": "*",
+    "@pdfgen/utils": "*",
     "hono": "^4.2.3",
     "hono-rate-limiter": "^0.4.0",
     "mongoose": "^8.3.2",

@@ -1,15 +1,28 @@
 import { logger } from '@pdfgen/logging';
 import { ConfirmChannel, Options } from 'amqplib';
 
+import { wrapMonad } from '@pdfgen/utils';
 import { AmqpConnection } from './connect';
 
-interface AckObject {
-  success: () => void;
-  failure: () => void;
-  requeue: () => void;
+enum AckResult {
+  Success = 1,
+  Failure,
+  Requeue
+};
+
+interface AckFunctions {
+  success: () => AckResult;
+  failure: () => AckResult;
+  requeue: () => AckResult;
 }
 
-export type Worker<T> = (jobId: string, content: T, ack: AckObject, isRedelivered: boolean) => Promise<void>;
+const ack: AckFunctions = {
+  success: () => AckResult.Success,
+  failure: () => AckResult.Failure,
+  requeue: () => AckResult.Requeue
+};
+
+export type Worker<T> = (jobId: string, content: T, ack: AckFunctions, isRedelivered: boolean) => Promise<AckResult>;
 type SubscriptionId = string;
 
 export interface WorkerQueue<T> {
@@ -97,32 +110,45 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
       };
         
       const consumer = await channel.consume(queueName, async message => {
+        const context = {queueName, message};
+        
         if (!message) {
-          logger.fatal(`Got empty message from queue: ${queueName}`);
+          logger.fatal({msg: 'Got empty message from queue', context});
           
           return;
         }
 
-        logger.debug({
-          msg: 'Got message from rabbit:',
-          data: message
-        });
+        logger.debug({msg: 'Got message from rabbit', context});
 
         const content = deserializeJsonContent<T>(message.content);
         const jobId = message.properties.correlationId;
 
-        const ack = {
-          success: () => channel.ack(message),
-          failure: () => channel.reject(message),
-          requeue: () => channel.nack(message)
-        }
+        const [hasWorkerFailed, error, result] = await wrapMonad(() => worker(jobId, content, ack, message.fields.redelivered));
 
-        try {
-          await worker(jobId, content, ack, message.fields.redelivered);
-        } catch (error) {
+        if (hasWorkerFailed) {
+          channel.reject(message);
           logger.fatal({err: error, context: {jobId}});
+
+          return;
         }
 
+        switch (result) {
+          case AckResult.Success:
+            channel.ack(message);
+            break;
+
+          case AckResult.Failure:
+            channel.reject(message);
+            break;
+
+          case AckResult.Requeue:
+            channel.nack(message);
+            break;
+        
+          default:
+            channel.reject(message);
+            break;
+        }
       }, consumeOptions);
 
       return consumer.consumerTag;

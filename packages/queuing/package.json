@@ -19,6 +19,7 @@
   "dependencies": {
     "@pdfgen/logging": "*",
     "@pdfgen/react-pdf": "*",
+    "@pdfgen/utils": "*",
     "amqplib": "^0.10.4"
   }
 }
