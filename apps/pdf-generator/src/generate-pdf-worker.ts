@@ -1,15 +1,15 @@
 import { logger } from '@pdfgen/logging';
 import { pdfGeneratedQueue, PdfRequestedMessageContent, Worker } from '@pdfgen/queuing';
 import { generatePdf } from '@pdfgen/react-pdf';
-import { wrapMonad } from '@pdfgen/utils';
+import { wrapInMonad } from '@pdfgen/utils';
 import { fileManager } from './file-manager';
 
-const createPdfWorker: Worker<PdfRequestedMessageContent> = async (pdfId, content, ack) => {
+const createPdfWorker: Worker<PdfRequestedMessageContent> = async ({jobId: pdfId, content}, ack) => {
   const context = {pdfId, content: content.container};
 
   logger.info({msg: 'Generating pdf...', context});
 
-  const [isGenerateRejected, generateError, generatedPdf] = await wrapMonad(() => generatePdf(content.container));
+  const [isGenerateRejected, generateError, generatedPdf] = await wrapInMonad(() => generatePdf(content.container));
 
   if (isGenerateRejected) {
     logger.error({msg: `Could not have generated pdf content!`, context, err: generateError});
@@ -17,7 +17,7 @@ const createPdfWorker: Worker<PdfRequestedMessageContent> = async (pdfId, conten
     return ack.failure();
   }
 
-  const [isUploadRejected, uploadError, file] = await wrapMonad(() => fileManager.upload(`${pdfId}.pdf`, generatedPdf.pdfReadStream));
+  const [isUploadRejected, uploadError, file] = await wrapInMonad(() => fileManager.upload(`${pdfId}.pdf`, generatedPdf.pdfReadStream));
 
   if (isUploadRejected) {
     logger.error({msg: `Could not have uploaded pdf content!`, context, err: uploadError});

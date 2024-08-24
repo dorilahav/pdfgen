@@ -1,19 +1,17 @@
 import { logger } from '@pdfgen/logging';
 import { PdfGeneratedMessageContent, Worker } from '@pdfgen/queuing';
-import { wrapMonad } from '@pdfgen/utils';
+import { wrapInMonad } from '@pdfgen/utils';
 import { markPdfDocumentAsReady } from '../repositories/pdf-documents';
 
-const markPdfReady: Worker<PdfGeneratedMessageContent> = async (pdfId, content, ack, isRetry) => {
+const markPdfReady: Worker<PdfGeneratedMessageContent> = async ({jobId: pdfId, content}, ack, isRetry) => {
   const context = {pdfId, fileId: content.fileId};
 
   logger.info({msg: 'Updating pdf status to ready...', context});
 
-  const [isRejected, error, pdfDocument] = await wrapMonad(() => markPdfDocumentAsReady(pdfId, content.fileId));
+  const [isRejected, error, pdfDocument] = await wrapInMonad(() => markPdfDocumentAsReady(pdfId, content.fileId));
   
   if (isRejected) {
     logger.error({msg: `Cannot mark Pdf as ready because an error has occurred.`, context, err: error});
-
-    // TODO: pass to error queue.
 
     return ack.failure();
   }

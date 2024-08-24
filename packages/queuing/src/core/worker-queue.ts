@@ -1,28 +1,19 @@
 import { logger } from '@pdfgen/logging';
-import { ConfirmChannel, Options } from 'amqplib';
+import { ConfirmChannel, ConsumeMessage, Options } from 'amqplib';
 
-import { wrapMonad } from '@pdfgen/utils';
+import { wrapInMonad } from '@pdfgen/utils';
+import { AckFunctions, ackFunctions, ackMessageOnChannel, AckResult } from './acknowledgement';
 import { AmqpConnection } from './connect';
+import { deserializeJsonContent, serializeJsonContent } from './serialization';
 
-enum AckResult {
-  Success = 1,
-  Failure,
-  Requeue
-};
-
-interface AckFunctions {
-  success: () => AckResult;
-  failure: () => AckResult;
-  requeue: () => AckResult;
+interface ConsumeContext<T> {
+  queueName: string;
+  message: ConsumeMessage;
+  jobId: string;
+  content: T;
 }
 
-const ack: AckFunctions = {
-  success: () => AckResult.Success,
-  failure: () => AckResult.Failure,
-  requeue: () => AckResult.Requeue
-};
-
-export type Worker<T> = (jobId: string, content: T, ack: AckFunctions, isRedelivered: boolean) => Promise<AckResult>;
+export type Worker<T> = (context: ConsumeContext<T>, ack: AckFunctions, isRedelivered: boolean) => Promise<AckResult>;
 type SubscriptionId = string;
 
 export interface WorkerQueue<T> {
@@ -40,7 +31,7 @@ export interface WorkerQueueOptions {
   deadLetter?: DeadLetterOptions;
 }
 
-const mapWorkerOptionsToAssertionOptions = (options: WorkerQueueOptions = {}): Options.AssertQueue => {
+const mapWorkerOptionsToQueueAssertionOptions = (options: WorkerQueueOptions = {}): Options.AssertQueue => {
   const queueOptions: Options.AssertQueue = {durable: true};
 
   if (options.deadLetter) {
@@ -49,18 +40,6 @@ const mapWorkerOptionsToAssertionOptions = (options: WorkerQueueOptions = {}): O
   }
 
   return queueOptions;
-}
-
-const serializeJsonContent = (content: unknown): Buffer => {
-  const contentAsString = JSON.stringify(content);
-
-  return Buffer.from(contentAsString);
-}
-
-const deserializeJsonContent = <T>(buffer: Buffer): T => {
-  const contentAsString = buffer.toString();
-
-  return JSON.parse(contentAsString);
 }
 
 export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOptions): WorkerQueue<T> => {
@@ -73,13 +52,28 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
     }
   }
 
+  const assertDeadLetterExchange = async () => {
+    const {exchange} = await channel.assertExchange('dead-letter-exchange', 'fanout', {durable: true});
+    const {queue} = await channel.assertQueue('errors', {durable: true});
+
+    await channel.bindQueue(queue, exchange, '');
+
+    return exchange;
+  }
+  
+
   return {
     async init(connection: AmqpConnection) {
       channel = connection.channel;
 
-      const assertionOptions = mapWorkerOptionsToAssertionOptions(options);
+      const queueAssertionOptions = mapWorkerOptionsToQueueAssertionOptions(options);
 
-      await channel.assertQueue(queueName, assertionOptions);
+      await Promise.all([
+        channel.assertExchange(queueName, 'fanout', {durable: true}),
+        channel.assertQueue(queueName, queueAssertionOptions)
+      ]);
+
+      await channel.bindQueue(queueName, queueName, '');
 
       isInitialized = true;
     },
@@ -90,10 +84,10 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
         persistent: true,
         correlationId: jobId,
         contentType: 'application/json'
-      };
+      }
 
       return new Promise((resolve, reject) => {
-        channel.sendToQueue(queueName, serializeJsonContent(content), options, error => {
+        channel.publish(queueName, '', serializeJsonContent(content), options, error => {
           if (error) {
             reject(error);
           } {
@@ -105,51 +99,32 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
     async subscribe(worker) {
       assertInitialized();
 
-      const consumeOptions: Options.Consume = {
-        noAck: false
-      };
-        
       const consumer = await channel.consume(queueName, async message => {
-        const context = {queueName, message};
-        
         if (!message) {
-          logger.fatal({msg: 'Got empty message from queue', context});
+          logger.fatal({msg: 'Got empty message from queue, this is probably a bug. Aborting.', context: {queueName, message}});
           
           return;
         }
 
-        logger.debug({msg: 'Got message from rabbit', context});
-
         const content = deserializeJsonContent<T>(message.content);
         const jobId = message.properties.correlationId;
+        const context: ConsumeContext<T> = {queueName, message, content, jobId};
+        
+        logger.info({msg: 'Got message from rabbit', context});
 
-        const [hasWorkerFailed, error, result] = await wrapMonad(() => worker(jobId, content, ack, message.fields.redelivered));
+        const [hasWorkerFailed, error, result] = await wrapInMonad(() => worker(context, ackFunctions, message.fields.redelivered));
 
         if (hasWorkerFailed) {
-          channel.reject(message);
-          logger.fatal({err: error, context: {jobId}});
+          logger.fatal({msg: 'Error while processing message', err: error, context});
+          channel.reject(message, false);
 
           return;
         }
 
-        switch (result) {
-          case AckResult.Success:
-            channel.ack(message);
-            break;
+        ackMessageOnChannel(channel, message, result);
 
-          case AckResult.Failure:
-            channel.reject(message);
-            break;
-
-          case AckResult.Requeue:
-            channel.nack(message);
-            break;
-        
-          default:
-            channel.reject(message);
-            break;
-        }
-      }, consumeOptions);
+        logger.info({msg: 'Finished processing message', context: {...context, result}});
+      }, {noAck: false});
 
       return consumer.consumerTag;
     }

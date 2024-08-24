@@ -3,7 +3,7 @@ type RejectedAsyncMonad = [isRejected: true, error: unknown, value: undefined];
 
 export type AsyncMonad<T> = FulfilledAsyncMonad<T> | RejectedAsyncMonad;
 
-export const wrapMonad = async <T>(asyncAction: () => Promise<T>): Promise<AsyncMonad<T>> => {
+export const wrapInMonad = async <T>(asyncAction: () => Promise<T>): Promise<AsyncMonad<T>> => {
   try {
     const value = await asyncAction();
 
