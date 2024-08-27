@@ -42,7 +42,8 @@ try {
     logFilePath: path.join('logs', 'app.log'),
     dev: true,
     debug: true,
-    environment: 'development'
+    environment: 'development',
+    sentryDsn: 'https://5c2e3168a9507a5600d56a719e23b8ee@o4507850932355072.ingest.de.sentry.io/4507851035050064'
   });
 } catch (error) {
   throw new Error('An error has occurred while trying to initialize logger', {cause: error});

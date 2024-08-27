@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "pino": "^9.0.0",
-    "pino-pretty": "^11.0.0"
+    "pino-pretty": "^11.0.0",
+    "pino-sentry-transport": "^1.3.0"
   }
 }

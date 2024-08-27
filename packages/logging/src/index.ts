@@ -33,6 +33,11 @@ interface LoggerOptions {
   environment: string;
 
   /**
+   * The sentry dsn to send logs to, if none is provided sentry logging will be disabled.
+   */
+  sentryDsn?: string;
+
+  /**
    * Turns on some development features like pretty logging to console.
    */
   dev?: boolean;
@@ -54,6 +59,18 @@ export const initLogging = (options: LoggerOptions) => {
     }
   ];
 
+  if (options.sentryDsn) {
+    targets.push({
+      target: 'pino-sentry-transport',
+      options: {
+        sentry: {
+          dsn: options.sentryDsn,
+          environment: options.environment
+        }
+      },
+      level: 'warn'
+    })
+  }
 
   if (options.dev) {
     targets.push({
