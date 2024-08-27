@@ -22,27 +22,7 @@ export interface WorkerQueue<T> {
   subscribe: (worker: Worker<T>) => Promise<SubscriptionId>;
 }
 
-interface DeadLetterOptions {
-  exchange: string;
-  routingKey?: string;
-}
-
-export interface WorkerQueueOptions {
-  deadLetter?: DeadLetterOptions;
-}
-
-const mapWorkerOptionsToQueueAssertionOptions = (options: WorkerQueueOptions = {}): Options.AssertQueue => {
-  const queueOptions: Options.AssertQueue = {durable: true};
-
-  if (options.deadLetter) {
-    queueOptions.deadLetterExchange = options.deadLetter.exchange;
-    queueOptions.deadLetterRoutingKey = options.deadLetter.routingKey;
-  }
-
-  return queueOptions;
-}
-
-export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOptions): WorkerQueue<T> => {
+export const createWorkerQueue = <T>(queueName: string): WorkerQueue<T> => {
   let isInitialized = false;
   let channel: ConfirmChannel;
 
@@ -52,7 +32,7 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
     }
   }
 
-  const assertDeadLetterExchange = async () => {
+  const assertGlobalDeadLetterExchange = async () => {
     const {exchange} = await channel.assertExchange('dead-letter-exchange', 'fanout', {durable: true});
     const {queue} = await channel.assertQueue('errors', {durable: true});
 
@@ -60,17 +40,16 @@ export const createWorkerQueue = <T>(queueName: string, options?: WorkerQueueOpt
 
     return exchange;
   }
-  
 
   return {
     async init(connection: AmqpConnection) {
       channel = connection.channel;
 
-      const queueAssertionOptions = mapWorkerOptionsToQueueAssertionOptions(options);
+      const deadLetterExchange = await assertGlobalDeadLetterExchange();
 
       await Promise.all([
         channel.assertExchange(queueName, 'fanout', {durable: true}),
-        channel.assertQueue(queueName, queueAssertionOptions)
+        channel.assertQueue(queueName, {durable: true, deadLetterExchange})
       ]);
 
       await channel.bindQueue(queueName, queueName, '');

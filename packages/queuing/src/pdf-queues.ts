@@ -21,7 +21,3 @@ export const pdfGeneratedQueue = createWorkerQueue<PdfGeneratedMessageContent>(p
 export interface PdfFailedMessageContent {
   pdfId: string;
 }
-
-const pdfFailedQueueName = 'pdf-failed';
-
-export const pdfFailedQueue = createWorkerQueue<PdfFailedMessageContent>(pdfFailedQueueName);
